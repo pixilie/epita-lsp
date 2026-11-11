@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "https://channels.nixos.org/nixos-unstable/nixexprs.tar.xz";
+    nixpkgs.url = "github:NixOS/nixpkgs?ref=nixos-unstable";
 
     rust-overlay.url = "github:oxalica/rust-overlay";
     rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
@@ -13,7 +13,7 @@
       rust-overlay,
     }:
     let
-      inherit (nixpkgs.lib) genAttrs;
+      inherit (nixpkgs.lib) genAttrs getExe;
 
       forAllSystems = genAttrs [
         "x86_64-linux"
@@ -21,6 +21,13 @@
         "aarch64-darwin"
       ];
       forAllPkgs = function: forAllSystems (system: function pkgs.${system});
+
+      mkApp = (
+        program: {
+          type = "app";
+          inherit program;
+        }
+      );
 
       pkgs = forAllSystems (
         system:
@@ -32,6 +39,15 @@
     in
     {
       formatter = forAllPkgs (pkgs: pkgs.nixfmt-tree);
+
+      packages = forAllPkgs (pkgs: rec {
+        default = epita-lsp;
+        epita-lsp = pkgs.callPackage ./package.nix { };
+      });
+      apps = forAllSystems (system: rec {
+        default = epita-lsp;
+        epita-lsp = mkApp (getExe self.packages.${system}.epita-lsp);
+      });
 
       devShells = forAllPkgs (
         pkgs:
