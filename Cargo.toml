@@ -1,8 +1,10 @@
 [package]
-name = "epita-lsp"
+name = "epita_lsp"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 tower-lsp-server = "0.24.0-rc.1"
 tokio = { version = "1", features = ["full"] }
+tree-sitter = "0.27.2"
+tree-sitter-c = "0.24.2"
